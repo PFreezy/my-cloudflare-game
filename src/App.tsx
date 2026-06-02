@@ -4,13 +4,13 @@ function App() {
   return (
     <main className="app">
       <section className="hero">
-        <p className="eyebrow">Cloudflare Multiplayer Prototype</p>
+        <p className="eyebrow">Cloudflare RoomOS Prototype</p>
 
-        <h1>Paul's First Cloudflare Game</h1>
+        <h1>Shared Rooms for Games, Agents, and Decisions</h1>
 
         <p className="subtitle">
-          Create a room, invite a friend, and build the foundation for a
-          real-time multiplayer game running entirely on Cloudflare.
+          A Cloudflare-native room engine for presence, shared state, events,
+          voting, timelines, and real-time collaboration.
         </p>
 
         <div className="card">
