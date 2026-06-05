@@ -126,3 +126,19 @@ input::placeholder {
     flex-direction: column;
   }
 }
+.room-result {
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.room-result p {
+  margin-bottom: 0.35rem;
+  opacity: 0.75;
+}
+
+.room-result strong {
+  font-size: 2rem;
+  letter-spacing: 0.25rem;
+}

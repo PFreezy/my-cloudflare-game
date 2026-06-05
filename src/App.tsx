@@ -1,6 +1,24 @@
+import { useState } from "react";
 import "./App.css";
 
+function createRoomCode() {
+  const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+
+  for (let i = 0; i < 4; i++) {
+    code += letters[Math.floor(Math.random() * letters.length)];
+  }
+
+  return code;
+}
+
 function App() {
+  const [roomCode, setRoomCode] = useState("");
+
+  function handleCreateRoom() {
+    setRoomCode(createRoomCode());
+  }
+
   return (
     <main className="app">
       <section className="hero">
@@ -14,7 +32,14 @@ function App() {
         </p>
 
         <div className="card">
-          <button>Create Room</button>
+          <button onClick={handleCreateRoom}>Create Room</button>
+
+          {roomCode && (
+            <div className="room-result">
+              <p>Your room code is</p>
+              <strong>{roomCode}</strong>
+            </div>
+          )}
 
           <div className="join-row">
             <input placeholder="Enter room code" />
