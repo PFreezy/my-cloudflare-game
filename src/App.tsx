@@ -13,10 +13,88 @@ function createRoomCode() {
 }
 
 function App() {
-  const [roomCode, setRoomCode] = useState("");
+  const [playerName, setPlayerName] = useState("Paul");
+  const [joinCode, setJoinCode] = useState("");
+  const [activeRoomCode, setActiveRoomCode] = useState("");
+  const [screen, setScreen] = useState<"home" | "lobby">("home");
 
   function handleCreateRoom() {
-    setRoomCode(createRoomCode());
+    const newCode = createRoomCode();
+    setActiveRoomCode(newCode);
+    setScreen("lobby");
+  }
+
+  function handleJoinRoom() {
+    if (!joinCode.trim()) return;
+    setActiveRoomCode(joinCode.trim().toUpperCase());
+    setScreen("lobby");
+  }
+
+  function handleLeaveRoom() {
+    setActiveRoomCode("");
+    setJoinCode("");
+    setScreen("home");
+  }
+
+  if (screen === "lobby") {
+    return (
+      <main className="app">
+        <section className="hero">
+          <p className="eyebrow">RoomOS Lobby</p>
+
+          <h1>Room {activeRoomCode}</h1>
+
+          <p className="subtitle">
+            A local prototype of a shared room with members, presence, and an
+            event timeline.
+          </p>
+
+          <div className="card lobby-card">
+            <div className="room-code-pill">
+              Room Code <strong>{activeRoomCode}</strong>
+            </div>
+
+            <div className="lobby-grid">
+              <section className="lobby-panel">
+                <h2>Members</h2>
+
+                <div className="member-row">
+                  <span className="status-dot online"></span>
+                  <div>
+                    <strong>{playerName || "Guest"}</strong>
+                    <p>Host</p>
+                  </div>
+                </div>
+
+                <div className="member-row muted">
+                  <span className="status-dot"></span>
+                  <div>
+                    <strong>Waiting...</strong>
+                    <p>Invite another member</p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="lobby-panel">
+                <h2>Timeline</h2>
+
+                <div className="event-row">
+                  <span>01</span>
+                  <p>Room {activeRoomCode} created</p>
+                </div>
+
+                <div className="event-row">
+                  <span>02</span>
+                  <p>{playerName || "Guest"} joined the room</p>
+                </div>
+              </section>
+            </div>
+
+            <button onClick={handleLeaveRoom}>Leave Room</button>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -32,18 +110,21 @@ function App() {
         </p>
 
         <div className="card">
+          <input
+            value={playerName}
+            onChange={(event) => setPlayerName(event.target.value)}
+            placeholder="Your name"
+          />
+
           <button onClick={handleCreateRoom}>Create Room</button>
 
-          {roomCode && (
-            <div className="room-result">
-              <p>Your room code is</p>
-              <strong>{roomCode}</strong>
-            </div>
-          )}
-
           <div className="join-row">
-            <input placeholder="Enter room code" />
-            <button>Join Room</button>
+            <input
+              value={joinCode}
+              onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
+              placeholder="Enter room code"
+            />
+            <button onClick={handleJoinRoom}>Join Room</button>
           </div>
         </div>
       </section>

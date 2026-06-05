@@ -142,3 +142,95 @@ input::placeholder {
   font-size: 2rem;
   letter-spacing: 0.25rem;
 }
+.lobby-card {
+  text-align: left;
+}
+
+.room-code-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 18px;
+  background: rgba(59, 130, 246, 0.14);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.room-code-pill strong {
+  color: white;
+  letter-spacing: 0.25rem;
+  font-size: 1.5rem;
+}
+
+.lobby-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.lobby-panel {
+  padding: 1.25rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lobby-panel h2 {
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.member-row,
+.event-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.member-row:first-of-type,
+.event-row:first-of-type {
+  border-top: none;
+}
+
+.member-row p,
+.event-row p {
+  margin: 0;
+  opacity: 0.7;
+}
+
+.member-row strong {
+  display: block;
+}
+
+.member-row.muted {
+  opacity: 0.55;
+}
+
+.status-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.status-dot.online {
+  background: #22c55e;
+  box-shadow: 0 0 18px rgba(34, 197, 94, 0.75);
+}
+
+.event-row span {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #93c5fd;
+}
+
+@media (max-width: 700px) {
+  .lobby-grid {
+    grid-template-columns: 1fr;
+  }
+}
