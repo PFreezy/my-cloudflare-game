@@ -12,6 +12,18 @@ type TimelineEvent = {
   timestamp: string;
 };
 
+type RoomMetadata = {
+  code: string;
+  roomType: RoomType;
+  status: "Local Prototype";
+  connection: "Worker API Mock";
+  createdAt: string;
+};
+
+type ApiRoomResponse = {
+  room: RoomMetadata;
+};
+
 type RoomTypeOption = {
   id: RoomType;
   label: string;
@@ -112,41 +124,91 @@ function createInitialEvents(roomCode: string, roomType: RoomType, playerName: s
   ];
 }
 
+async function createRoomFromApi(roomType: RoomType) {
+  const response = await fetch("/api/rooms", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ roomType }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to create room.");
+  }
+
+  return (await response.json()) as ApiRoomResponse;
+}
+
+async function getRoomFromApi(roomCode: string, roomType: RoomType) {
+  const response = await fetch(`/api/rooms/${roomCode}?roomType=${roomType}`);
+
+  if (!response.ok) {
+    throw new Error("Unable to load room.");
+  }
+
+  return (await response.json()) as ApiRoomResponse;
+}
+
 function App() {
   const [playerName, setPlayerName] = useState("Paul");
   const [joinCode, setJoinCode] = useState("");
   const [activeRoomCode, setActiveRoomCode] = useState("");
+  const [activeConnection, setActiveConnection] = useState<
+    "Offline Mock" | "Worker API Mock"
+  >("Offline Mock");
   const [roomType, setRoomType] = useState<RoomType>("decision");
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [screen, setScreen] = useState<Screen>("home");
 
   const selectedRoomType = getRoomType(roomType);
   const isJoinCodeValid = joinCode.length === 4;
 
-  function openLobby(roomCode: string, selectedType: RoomType) {
+  function openLobby(
+    roomCode: string,
+    selectedType: RoomType,
+    connection: "Offline Mock" | "Worker API Mock" = "Offline Mock",
+  ) {
     setActiveRoomCode(roomCode);
+    setRoomType(selectedType);
+    setActiveConnection(connection);
     setTimelineEvents(createInitialEvents(roomCode, selectedType, playerName));
     setCopyStatus("idle");
     setScreen("lobby");
   }
 
-  function handleCreateRoom() {
-    openLobby(createRoomCode(), roomType);
+  async function handleCreateRoom() {
+    setIsCreatingRoom(true);
+
+    try {
+      const response = await createRoomFromApi(roomType);
+      openLobby(response.room.code, response.room.roomType, response.room.connection);
+    } catch {
+      openLobby(createRoomCode(), roomType);
+    } finally {
+      setIsCreatingRoom(false);
+    }
   }
 
   function handleJoinCodeChange(value: string) {
     setJoinCode(value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4));
   }
 
-  function handleJoinRoom() {
+  async function handleJoinRoom() {
     const cleanedCode = joinCode.trim().toUpperCase();
 
     if (cleanedCode.length !== 4) {
       return;
     }
 
-    openLobby(cleanedCode, roomType);
+    try {
+      const response = await getRoomFromApi(cleanedCode, roomType);
+      openLobby(response.room.code, response.room.roomType, response.room.connection);
+    } catch {
+      openLobby(cleanedCode, roomType);
+    }
   }
 
   async function handleCopyInviteCode() {
@@ -173,6 +235,7 @@ function App() {
 
   function handleLeaveRoom() {
     setActiveRoomCode("");
+    setActiveConnection("Offline Mock");
     setJoinCode("");
     setTimelineEvents([]);
     setCopyStatus("idle");
@@ -204,7 +267,7 @@ function App() {
             <div className="room-summary" aria-label="Room details">
               <span className="status-pill strong">{selectedRoomType.label}</span>
               <span className="status-pill">Local Prototype</span>
-              <span className="status-pill">Offline Mock</span>
+              <span className="status-pill">{activeConnection}</span>
             </div>
           </div>
 
@@ -322,8 +385,12 @@ function App() {
             </div>
           </div>
 
-          <button className="primary-button" onClick={handleCreateRoom}>
-            Create Room
+          <button
+            className="primary-button"
+            disabled={isCreatingRoom}
+            onClick={handleCreateRoom}
+          >
+            {isCreatingRoom ? "Creating..." : "Create Room"}
           </button>
 
           <div className="join-section">

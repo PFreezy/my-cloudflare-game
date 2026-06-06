@@ -268,11 +268,13 @@ input::placeholder {
   transform: translateY(-2px);
 }
 
+.primary-button:disabled,
 .secondary-button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
 
+.primary-button:disabled:hover,
 .secondary-button:disabled:hover {
   transform: none;
 }
