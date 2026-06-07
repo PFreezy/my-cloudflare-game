@@ -12,12 +12,21 @@ type TimelineEvent = {
   timestamp: string;
 };
 
+type RoomMember = {
+  id: string;
+  name: string;
+  role: string;
+  status: "Online" | "Mock";
+};
+
 type RoomMetadata = {
   code: string;
   roomType: RoomType;
-  status: "Local Prototype";
-  connection: "Worker API Mock";
+  status: "Local Prototype" | "Open";
+  connection: "Offline Mock" | "Worker API Mock" | "Durable Object";
   createdAt: string;
+  members?: RoomMember[];
+  events?: TimelineEvent[];
 };
 
 type ApiRoomResponse = {
@@ -124,13 +133,13 @@ function createInitialEvents(roomCode: string, roomType: RoomType, playerName: s
   ];
 }
 
-async function createRoomFromApi(roomType: RoomType) {
+async function createRoomFromApi(roomType: RoomType, hostName: string) {
   const response = await fetch("/api/rooms", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ roomType }),
+    body: JSON.stringify({ roomType, hostName }),
   });
 
   if (!response.ok) {
@@ -154,10 +163,14 @@ function App() {
   const [playerName, setPlayerName] = useState("Paul");
   const [joinCode, setJoinCode] = useState("");
   const [activeRoomCode, setActiveRoomCode] = useState("");
+  const [activeRoomStatus, setActiveRoomStatus] = useState<"Local Prototype" | "Open">(
+    "Local Prototype",
+  );
   const [activeConnection, setActiveConnection] = useState<
-    "Offline Mock" | "Worker API Mock"
+    "Offline Mock" | "Worker API Mock" | "Durable Object"
   >("Offline Mock");
   const [roomType, setRoomType] = useState<RoomType>("decision");
+  const [roomMembers, setRoomMembers] = useState<RoomMember[]>([]);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
@@ -169,12 +182,21 @@ function App() {
   function openLobby(
     roomCode: string,
     selectedType: RoomType,
-    connection: "Offline Mock" | "Worker API Mock" = "Offline Mock",
+    connection: "Offline Mock" | "Worker API Mock" | "Durable Object" = "Offline Mock",
+    room?: RoomMetadata,
   ) {
+    const fallbackEvents = createInitialEvents(roomCode, selectedType, playerName);
+
     setActiveRoomCode(roomCode);
+    setActiveRoomStatus(room?.status ?? "Local Prototype");
     setRoomType(selectedType);
-    setActiveConnection(connection);
-    setTimelineEvents(createInitialEvents(roomCode, selectedType, playerName));
+    setActiveConnection(room?.connection ?? connection);
+    setRoomMembers(
+      room?.members ?? [
+        { id: "host", name: playerName.trim() || "Guest", role: "Host", status: "Online" },
+      ],
+    );
+    setTimelineEvents(room?.events ?? fallbackEvents);
     setCopyStatus("idle");
     setScreen("lobby");
   }
@@ -183,8 +205,13 @@ function App() {
     setIsCreatingRoom(true);
 
     try {
-      const response = await createRoomFromApi(roomType);
-      openLobby(response.room.code, response.room.roomType, response.room.connection);
+      const response = await createRoomFromApi(roomType, playerName);
+      openLobby(
+        response.room.code,
+        response.room.roomType,
+        response.room.connection,
+        response.room,
+      );
     } catch {
       openLobby(createRoomCode(), roomType);
     } finally {
@@ -205,7 +232,12 @@ function App() {
 
     try {
       const response = await getRoomFromApi(cleanedCode, roomType);
-      openLobby(response.room.code, response.room.roomType, response.room.connection);
+      openLobby(
+        response.room.code,
+        response.room.roomType,
+        response.room.connection,
+        response.room,
+      );
     } catch {
       openLobby(cleanedCode, roomType);
     }
@@ -235,8 +267,10 @@ function App() {
 
   function handleLeaveRoom() {
     setActiveRoomCode("");
+    setActiveRoomStatus("Local Prototype");
     setActiveConnection("Offline Mock");
     setJoinCode("");
+    setRoomMembers([]);
     setTimelineEvents([]);
     setCopyStatus("idle");
     setScreen("home");
@@ -244,10 +278,11 @@ function App() {
 
   if (screen === "lobby") {
     const members = [
-      { name: playerName.trim() || "Guest", role: "Host", status: "Online" },
+      ...roomMembers,
       ...selectedRoomType.mockMembers.map((member) => ({
+        id: `mock-${member.name}`,
         ...member,
-        status: "Mock",
+        status: "Mock" as const,
       })),
     ];
 
@@ -266,7 +301,7 @@ function App() {
 
             <div className="room-summary" aria-label="Room details">
               <span className="status-pill strong">{selectedRoomType.label}</span>
-              <span className="status-pill">Local Prototype</span>
+              <span className="status-pill">{activeRoomStatus}</span>
               <span className="status-pill">{activeConnection}</span>
             </div>
           </div>

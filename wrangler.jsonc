@@ -16,6 +16,22 @@
 	"upload_source_maps": true,
 	"compatibility_flags": [
 		"nodejs_compat"
+	],
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "ROOM_OBJECT",
+				"class_name": "RoomObject"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"RoomObject"
+			]
+		}
 	]
 	/**
 	 * Smart Placement
